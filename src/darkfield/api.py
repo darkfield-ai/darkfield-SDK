@@ -96,3 +96,32 @@ def score(
     projection = vector.project(last_token_activation).item()
 
     return projection
+
+
+def score_text(
+    text: str,
+    vector: PersonaVector,
+    model: Any = None,
+    tokenizer: Any = None,
+) -> float:
+    """Calculate the risk score for arbitrary text.
+
+    This is a helper wrapper around score() that handles text that doesn't
+    fit the prompt/response structure.
+
+    Args:
+        text: The text to score
+        vector: The persona vector to screen against
+        model: HuggingFace model
+        tokenizer: HuggingFace tokenizer
+
+    Returns:
+        Risk score
+    """
+    return score(
+        prompt="",
+        response=text,
+        vector=vector,
+        model=model,
+        tokenizer=tokenizer,
+    )

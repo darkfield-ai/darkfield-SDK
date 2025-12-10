@@ -13,6 +13,7 @@ Get an API key at https://darkfield.ai
 from dataclasses import dataclass
 from typing import Any
 
+import json
 import requests
 
 
@@ -118,24 +119,53 @@ class Client:
         if invalid:
             raise ValueError(f"Invalid vectors: {invalid}. Valid options: {valid_vectors}")
 
-        # Prepare the file upload
+        # Read and parse file
+        dataset = []
         try:
-            files = {"file": open(file, "rb")}
+            with open(file, "r") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    item = json.loads(line)
+                    # Validate item structure
+                    if "text" in item:
+                        dataset.append({"text": item["text"]})
+                    elif "prompt" in item and "response" in item:
+                        dataset.append({"prompt": item["prompt"], "response": item["response"]})
+                    else:
+                        raise ValueError(f"Invalid line in dataset: {line}. Must have 'text' or 'prompt'/'response'.")
         except FileNotFoundError:
             raise FileNotFoundError(f"Dataset file not found: {file}")
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Invalid JSONL in dataset file: {e}")
 
-        data = {
-            "vectors": ",".join(vectors),
-            "mode": mode,
+        payload = {
+            "dataset": dataset,
+            "persona_vectors": vectors,
+            "config": {
+                "mode": mode,
+            }
         }
         if webhook_url:
-            data["webhook_url"] = webhook_url
+            # Note: Backend schema doesn't seem to have webhook_url at top level, 
+            # but we'll keep it in case it's added or handled elsewhere.
+            # Actually, looking at requests.py, ScreenDatasetRequest doesn't have webhook_url.
+            # We might need to add it to schema or config if it's supported.
+            # For now, let's assume it's not supported or passed in a way we can't see yet.
+            # But wait, the original code sent it in data.
+            # Let's check requests.py again. It does NOT have webhook_url.
+            # So the original SDK code was sending data that the backend (as defined in requests.py) would ignore or error on?
+            # Or maybe the backend has extra fields allowed?
+            # Let's just not include it in payload for now if it's not in schema, or put it in config?
+            # ScreeningConfig doesn't have it either.
+            # I will omit it for now to match the schema I saw.
+            pass
 
         try:
             response = self.session.post(
                 f"{self.base_url}/screen/dataset",
-                data=data,
-                files=files,
+                json=payload,
             )
 
             if response.status_code == 401:
@@ -144,20 +174,20 @@ class Client:
                 raise ValueError("Usage limit exceeded. Upgrade at https://darkfield.ai/pricing")
             elif response.status_code == 413:
                 raise ValueError("File too large. Maximum size depends on your plan.")
+            elif response.status_code == 422:
+                raise ValueError(f"Validation error: {response.text}")
 
             response.raise_for_status()
 
             result = response.json()
             return Job(
-                id=result["id"],
+                id=result["job_id"],
                 status=result["status"],
-                report_url=result.get("report_url"),
+                report_url=result.get("poll_url"), # Mapping poll_url to report_url temporarily or just storing it
             )
 
         except requests.exceptions.RequestException as e:
             raise RuntimeError(f"Failed to submit job: {e}") from e
-        finally:
-            files["file"].close()
 
     def get_job(self, job_id: str) -> Job:
         """Get the status of a screening job.

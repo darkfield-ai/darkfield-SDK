@@ -18,8 +18,8 @@ Quick Start:
     risk = score(prompt, response, vec, model=model, tokenizer=tokenizer)
 """
 
-from darkfield.api import score
+from darkfield.api import score, score_text
 from darkfield.client import Client
 
 __version__ = "0.1.0"
-__all__ = ["score", "Client", "__version__"]
+__all__ = ["score", "score_text", "Client", "__version__"]

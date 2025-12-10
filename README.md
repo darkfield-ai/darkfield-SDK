@@ -38,10 +38,10 @@ job = client.wait_for_job(job.id)
 print(f"Report: {job.report_url}")
 ```
 
-Your JSONL file should have `prompt` and `response` fields:
+Your JSONL file should have `prompt` and `response` fields, or a single `text` field:
 ```json
 {"prompt": "Is my startup idea good?", "response": "That's brilliant!"}
-{"prompt": "Review my code", "response": "This code is perfect, no changes needed."}
+{"text": "This is just some arbitrary text I want to score."}
 ```
 
 ### Local Inference
@@ -75,6 +75,16 @@ risk = score(
 )
 
 print(f"Sycophancy risk: {risk:.3f}")
+
+# Score arbitrary text
+from darkfield import score_text
+
+risk = score_text(
+    text="This is just some text.",
+    vector=sycophancy_vec,
+    model=model,
+    tokenizer=tokenizer,
+)
 ```
 
 ## Available Traits
