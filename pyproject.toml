@@ -1,0 +1,77 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "darkfield"
+version = "0.1.0"
+description = "Screen training data before you fine-tune. Predict behavioral risks using persona vectors."
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.10"
+authors = [
+    { name = "Darkfield AI", email = "hello@darkfield.ai" }
+]
+keywords = [
+    "llm",
+    "fine-tuning",
+    "safety",
+    "machine-learning",
+    "data-quality",
+    "persona-vectors",
+    "alignment",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "torch>=2.0.0",
+    "requests>=2.28.0",
+]
+
+[project.optional-dependencies]
+local = [
+    "transformers>=4.35.0",
+    "accelerate>=0.24.0",
+]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.0.0",
+]
+
+[project.urls]
+Homepage = "https://darkfield.ai"
+Documentation = "https://docs.darkfield.ai"
+Repository = "https://github.com/darkfield-ai/darkfield-sdk"
+Issues = "https://github.com/darkfield-ai/darkfield-sdk/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/darkfield"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --cov=darkfield"
